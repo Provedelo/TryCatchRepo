@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import model.exceptions.DomainException;
+
 public class Reservation {
 	
 	private Integer roomNumber;
@@ -12,7 +14,11 @@ public class Reservation {
 	
 	public Reservation(){ }
 
-	public Reservation(Integer roomNumber, Date checkin, Date checkout) {
+	public Reservation(Integer roomNumber, Date checkin, Date checkout) { //com runtimeException n precisa de add throws exception como nos posteriores
+		if (!checkout.after(checkin)) {
+			throw new DomainException( "Error in reservation: Check-out date must be after check-In date");//usado em ambos, função ja existente no java
+		}
+		
 		this.roomNumber = roomNumber;
 		this.checkin = checkin;
 		this.checkout = checkout;
@@ -40,22 +46,19 @@ public class Reservation {
 	public long duration() {
 		long diff = checkout.getTime() - checkin.getTime();
 		return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS); //converte miliseconds em dias
+		
 	}
 	
-	public String updateDates(Date checkIn, Date checkOut) {
-		this.checkin = checkIn;
-		this.checkout = checkOut;	
-		
+	public void updateDates(Date checkIn, Date checkOut) throws DomainException { //propaga na assinatura do metodo, com o throws, chamando nossa classe de tratamento DomainException
 		Date now = new Date();
-		if (checkIn.before(now) || checkout.before(now)) {
-			return "Error in reservation: Reservation dates must be in future dates";
-		}
-		if (!checkout.after(checkIn)) {
-			return "Error in reservation: Check-out date must be after check-In date";
-		}
 		this.checkin = checkIn;
 		this.checkout = checkOut;
-		return null; //se retornar nulo é porque n deu erro
+		if (checkIn.before(now) || checkOut.before(now)) {
+			throw new DomainException( "Error in reservation: Reservation dates must be in future dates");//throws chama uma funçao de exception
+		}
+		if (!checkOut.after(checkIn)) {
+			throw new DomainException( "Error in reservation: Check-out date must be after check-In date");//usado em ambos, função ja existente no java
+		}
 	}
 
 	@Override
